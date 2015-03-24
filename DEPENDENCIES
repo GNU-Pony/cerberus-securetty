@@ -4,3 +4,18 @@ RUNTIME DEPENDENCIES:
 	coreutils
 	grep
 
+
+BUILD DEPENDENCIES:
+
+	coreutils
+	make
+	texinfo		(opt-out, for info manual, opt-in for pdf, dvi and ps manuals)
+	texlive-core	(opt-in for pdf, dvi and ps manuals)
+
+
+INSTALL DEPENDENCIES:
+
+	coreutils
+	make
+
+
