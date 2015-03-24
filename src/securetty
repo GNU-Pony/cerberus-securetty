@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# cerberus-securetty – securetty support for cerberus
+# 
+# Copyright © 2015  Mattias Andrée (maandree@member.fsf.org)
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Login username, client hostname if non-local, ttyname, cerberus-hook
+username=
+hostname=
+ttyname="$(tty <&2 | cut -d / -f 1,2 --complement)"
+hook="${1}"
+# Remove the hookname from $@
+shift 1
+
+# Parse the command line, excluding the hookname
+# This is the arguments cerberus was spawned with
+hostname_on_next=0
+dash=0
+for arg in "$@"; do
+    if [ "${arg}" = "" ]; then
+	true
+    elif [ "${arg::1}" = "-" ] && [ ${dash} = 0 ]; then
+	arg="${arg:1}"
+	while [ ! "${arg}" = "" ]; do
+	    c="${arg::1}"
+	    arg="${arg:1}"
+	    if [ "${c}" = "h" ]; then # hostname
+		if [ ! "${arg}" = "" ]; then
+		    hostname="${arg}"
+		else
+		    hostname_on_next=1
+		fi
+		break
+	    elif [ "${c}" = "f" ]; then # force
+		if [ ! "${arg}" = "" ]; then
+		    username="${arg}"
+		fi
+		break
+	    elif [ "${c}" = "-" ]; then # username
+		dash=1
+		break
+	    fi
+	done
+    elif [ ${hostname_on_next} = 1 ]; then
+	hostname="${arg}"
+	hostname_on_next=0
+    else
+	username="${arg}"
+    fi
+done
+
+
+# Verify that the user may log in
+if [ "${hook}" = verify ]; then
+    if [ ! "${username}" = root ]; then
+	exit 0 # Not root: may log in
+    elif [ ! "${hostname}" = "" ]; then
+	exit 1 # Remote root: may not log in
+    elif [ ! -f "/etc/securetty" ]; then
+	exit 0 # /etc/securetty does not exist: may log in
+    elif grep "^${ttyname}$" < "/etc/securetty" > "/dev/null" 2> "/dev/null"
+	exit 0 # Root on whitelisted tty: may log in
+    else
+	exit 1 # Root on non-whitelisted tty: may not log in
+    fi
+fi
+
