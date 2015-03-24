@@ -69,12 +69,14 @@ if [ "${hook}" = verify ]; then
     if [ ! "${username}" = root ]; then
 	exit 0 # Not root: may log in
     elif [ ! "${hostname}" = "" ]; then
+	echo "Sorry, root may not log in remotely" >&2
 	exit 1 # Remote root: may not log in
     elif [ ! -f "/etc/securetty" ]; then
 	exit 0 # /etc/securetty does not exist: may log in
-    elif grep "^${ttyname}$" < "/etc/securetty" > "/dev/null" 2> "/dev/null"
+    elif grep "^${ttyname}$" < "/etc/securetty" > "/dev/null" 2> "/dev/null"; then
 	exit 0 # Root on whitelisted tty: may log in
     else
+	echo "Sorry, root may not log in on ${ttyname}, see /etc/securetty available TTY:s" >&2
 	exit 1 # Root on non-whitelisted tty: may not log in
     fi
 fi
