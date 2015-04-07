@@ -110,5 +110,5 @@ uninstall:
 
 .PHONY: clean
 clean:
-	-rm -r bin obj *.su src/*.su
+	-rm -r bin obj *.su src/*.su cerberus-securetty.{info,pdf,ps,dvi}
 
